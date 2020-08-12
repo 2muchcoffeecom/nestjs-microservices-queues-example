@@ -1,0 +1,39 @@
+version: "3"
+services:
+  redis:
+    image: redis:alpine
+    ports:
+      - 6379:6379
+  app:
+    build:
+      context: .
+    expose:
+      - 3300
+    command: npm run start:prod
+    environment:
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
+      - microservice
+    working_dir: /app
+    volumes:
+      - ./app:/app
+  microservice:
+    build:
+      context: .
+    command: npm run start:prod
+    environment:
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
+    working_dir: /microservice
+    volumes:
+      - ./microservice:/microservice
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - app
+    ports:
+      - 3300:3300
